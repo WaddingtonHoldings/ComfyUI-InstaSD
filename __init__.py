@@ -1,4 +1,4 @@
-from .InstaSD import InstaCBoolean, InstaCText, InstaCTextML, InstaCInteger, InstaCFloat, InstaCSeed
+from .InstaSD import InstaCBoolean, InstaCText, InstaCTextML, InstaCInteger, InstaCFloat, InstaCSeed, InstaCSaveImageToS3, InstaCLoadImageFromS3
 
 NODE_CLASS_MAPPINGS = {
     "InstaCBoolean": InstaCBoolean,
@@ -7,6 +7,8 @@ NODE_CLASS_MAPPINGS = {
     "InstaCFloat": InstaCFloat,
     "InstaCTextML": InstaCTextML,
     "InstaCSeed": InstaCSeed,
+    "InstaCSaveImageToS3": InstaCSaveImageToS3,
+    "InstaCLoadImageFromS3": InstaCLoadImageFromS3,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -16,6 +18,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "InstaCFloat": "InstaSD API Input - Float",
     "InstaCTextML": "InstaSD API Input - Multi Line Text",
     "InstaCSeed": "InstaSD API Input - Seed",
+    "InstaCSaveImageToS3": "InstaSD S3 - Save Image",
+    "InstaCLoadImageFromS3": "InstaSD S3 - Load Image",
 }
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
