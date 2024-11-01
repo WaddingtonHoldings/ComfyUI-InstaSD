@@ -1,4 +1,4 @@
-from .InstaSD import InstaCBoolean, InstaCText, InstaCTextML, InstaCInteger, InstaCFloat, InstaCSeed, InstaCSaveImageToS3, InstaCLoadImageFromS3, InstaCLoraFilePicker
+from .InstaSD import InstaCBoolean, InstaCText, InstaCTextML, InstaCInteger, InstaCFloat, InstaCSeed, InstaCSaveImageToS3, InstaCLoadImageFromS3, InstaCLoraLoader
 
 NODE_CLASS_MAPPINGS = {
     "InstaCBoolean": InstaCBoolean,
@@ -9,7 +9,7 @@ NODE_CLASS_MAPPINGS = {
     "InstaCSeed": InstaCSeed,
     "InstaCSaveImageToS3": InstaCSaveImageToS3,
     "InstaCLoadImageFromS3": InstaCLoadImageFromS3,
-    "InstaCLoraFilePicker": InstaCLoraFilePicker,
+    "InstaCLoraLoader": InstaCLoraLoader,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -21,7 +21,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "InstaCSeed": "InstaSD API Input - Seed",
     "InstaCSaveImageToS3": "InstaSD S3 - Save Image",
     "InstaCLoadImageFromS3": "InstaSD S3 - Load Image",
-    "InstaCLoraFilePicker": "InstaSD API Input - Lora File Picker"
+    "InstaCLoraLoader": "InstaSD API Input - Lora File Picker"
 }
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']

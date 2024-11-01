@@ -6,6 +6,7 @@ import boto3
 from PIL import Image, ImageSequence, ImageOps
 from datetime import datetime
 import folder_paths
+import comfy.utils
 
 class InstaCBoolean:
     def __init__(self):
@@ -252,23 +253,49 @@ class InstaCLoadImageFromS3:
 
         return (output_image, output_mask)
     
-class InstaCLoraFilePicker:
+class InstaCLoraLoader:
+    def __init__(self):
+        self.loaded_lora = None
+
     @classmethod
-    def INPUT_TYPES(cls):
+    def INPUT_TYPES(s):
         return {
-            "required": {
-                "lora_name": (folder_paths.get_filename_list("loras"), ),
+            "required": { 
+                "model": ("MODEL", {"tooltip": "The diffusion model the LoRA will be applied to."}),
+                "clip": ("CLIP", {"tooltip": "The CLIP model the LoRA will be applied to."}),
+                "lora_name": (folder_paths.get_filename_list("loras"), {"tooltip": "The name of the LoRA."}),
+                "strength_model": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01, "tooltip": "How strongly to modify the diffusion model. This value can be negative."}),
+                "strength_clip": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01, "tooltip": "How strongly to modify the CLIP model. This value can be negative."}),
             }
         }
+    
+    RETURN_TYPES = ("MODEL", "CLIP")
+    OUTPUT_TOOLTIPS = ("The modified diffusion model.", "The modified CLIP model.")
+    FUNCTION = "load_lora"
 
-    CATEGORY = "InstaSD" + "/API_inputs"
-    RETURN_TYPES = (folder_paths.get_filename_list("loras"),)
-    RETURN_NAMES = ("lora_name",)
+    CATEGORY = "loaders"
+    DESCRIPTION = "LoRAs are used to modify diffusion and CLIP models, altering the way in which latents are denoised such as applying styles. Multiple LoRA nodes can be linked together."
 
-    FUNCTION = "execute"
+    def load_lora(self, model, clip, lora_name, strength_model, strength_clip):
+        if strength_model == 0 and strength_clip == 0:
+            return (model, clip)
 
-    def execute(self, lora_name):
-        return (lora_name,)
+        lora_path = folder_paths.get_full_path_or_raise("loras", lora_name)
+        lora = None
+        if self.loaded_lora is not None:
+            if self.loaded_lora[0] == lora_path:
+                lora = self.loaded_lora[1]
+            else:
+                temp = self.loaded_lora
+                self.loaded_lora = None
+                del temp
+
+        if lora is None:
+            lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
+            self.loaded_lora = (lora_path, lora)
+
+        model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
+        return (model_lora, clip_lora)
 
 
 NODE_CLASS_MAPPINGS = {
@@ -280,7 +307,7 @@ NODE_CLASS_MAPPINGS = {
     "InstaCSeed": InstaCSeed,
     "InstaCSaveImageToS3": InstaCSaveImageToS3,
     "InstaCLoadImageFromS3": InstaCLoadImageFromS3,
-    "InstaCLoraFilePicker": InstaCLoraFilePicker,
+    "InstaCLoraLoader": InstaCLoraLoader,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -293,5 +320,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "InstaCSeed": "InstaSD API Input - Seed",
     "InstaCSaveImageToS3": "InstaSD S3 - Save Image",
     "InstaCLoadImageFromS3": "InstaSD S3 - Load Image",
-    "InstaCLoraFilePicker": "InstaSD API Input - Lora File Picker"
+    "InstaCLoraLoader": "InstaSD API Input - Lora Loader"
 }
