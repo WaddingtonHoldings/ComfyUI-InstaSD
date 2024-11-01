@@ -21,7 +21,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "InstaCSeed": "InstaSD API Input - Seed",
     "InstaCSaveImageToS3": "InstaSD S3 - Save Image",
     "InstaCLoadImageFromS3": "InstaSD S3 - Load Image",
-    "InstaCLoraLoader": "InstaSD API Input - Lora File Picker"
+    "InstaCLoraLoader": "InstaSD API Input - Lora Loader"
 }
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
