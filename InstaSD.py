@@ -5,6 +5,7 @@ import numpy as np
 import boto3
 from PIL import Image, ImageSequence, ImageOps
 from datetime import datetime
+import folder_paths
 
 class InstaCBoolean:
     def __init__(self):
@@ -250,6 +251,25 @@ class InstaCLoadImageFromS3:
             output_mask = output_masks[0]
 
         return (output_image, output_mask)
+    
+class InstaCLoraFilePicker:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "lora_name": (folder_paths.get_filename_list("loras"), ),
+            }
+        }
+
+    CATEGORY = "InstaSD" + "/API_inputs"
+    RETURN_TYPES = (folder_paths.get_filename_list("loras"),)
+    RETURN_NAMES = ("lora_name",)
+
+    FUNCTION = "execute"
+
+    def execute(self, lora_name):
+        return (lora_name,)
+
 
 NODE_CLASS_MAPPINGS = {
     "InstaCBoolean": InstaCBoolean,
@@ -260,6 +280,7 @@ NODE_CLASS_MAPPINGS = {
     "InstaCSeed": InstaCSeed,
     "InstaCSaveImageToS3": InstaCSaveImageToS3,
     "InstaCLoadImageFromS3": InstaCLoadImageFromS3,
+    "InstaCLoraFilePicker": InstaCLoraFilePicker,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -271,5 +292,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "InstaCTextML": "InstaSD API Input - Multi Line Text",
     "InstaCSeed": "InstaSD API Input - Seed",
     "InstaCSaveImageToS3": "InstaSD S3 - Save Image",
-    "InstaCLoadImageFromS3": "InstaSD S3 - Load Image"
+    "InstaCLoadImageFromS3": "InstaSD S3 - Load Image",
+    "InstaCLoraFilePicker": "InstaSD API Input - Lora File Picker"
 }
