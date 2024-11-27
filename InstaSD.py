@@ -7,6 +7,40 @@ from PIL import Image, ImageSequence, ImageOps
 from datetime import datetime
 import folder_paths
 import comfy.utils
+import os
+import json
+
+STYLES_PATH = os.path.join('/ComfyUI/styles', 'styles.json')
+WEBUI_STYLES_FILE = os.path.join('/ComfyUI/styles', 'styles.csv')
+
+if  os.path.exists(WEBUI_STYLES_FILE):
+
+    print(f"Importing styles from `{WEBUI_STYLES_FILE}`.")
+
+    import csv
+
+    styles = {}
+    with open(WEBUI_STYLES_FILE, "r", encoding="utf-8-sig", newline='') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            prompt = row.get("prompt") or row.get("text", "") # Old files
+            negative_prompt = row.get("negative_prompt", "")
+            styles[row["name"]] = {
+                "prompt": prompt,
+                "negative_prompt": negative_prompt
+            }
+
+    if styles:
+        if not os.path.exists(STYLES_PATH):
+            with open(STYLES_PATH, "w", encoding='utf-8') as f:
+                json.dump(styles, f, indent=4)
+
+    del styles
+
+    print(f"Styles import complete.")
+
+else:
+    print(f"Styles file `{WEBUI_STYLES_FILE}` does not exist. Place it under /ComfyUI/styles and restart Comfy.")
 
 class InstaCBoolean:
     def __init__(self):
@@ -288,6 +322,110 @@ class InstaCLoraLoader:
         model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
         return (model_lora, clip_lora)
 
+class InstaPromptStyleSelector:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        style_list = []
+        if os.path.exists(STYLES_PATH):
+            with open(STYLES_PATH, "r") as f:
+                if len(f.readlines()) != 0:
+                    f.seek(0)
+                    data = f.read()
+                    styles = json.loads(data)
+                    for style in styles.keys():
+                        style_list.append(style)
+        if not style_list:
+            style_list.append("None")
+        return {
+            "required": {
+                "style": (style_list,),
+            }
+        }
+
+    RETURN_TYPES = ("STRING","STRING")
+    RETURN_NAMES = ("positive_string", "negative_string")
+    FUNCTION = "load_style"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def load_style(self, style):
+
+        styles = {}
+        if os.path.exists(STYLES_PATH):
+            with open(STYLES_PATH, 'r') as data:
+                styles = json.load(data)
+        else:
+            print(f"The styles file does not exist at `{STYLES_PATH}`. Unable to load styles! Have you imported your AUTOMATIC1111 WebUI styles?")
+
+        if styles and style != None or style != 'None':
+            prompt = styles[style]['prompt']
+            negative_prompt = styles[style]['negative_prompt']
+        else:
+            prompt = ''
+            negative_prompt = ''
+
+        return (prompt, negative_prompt)
+
+class InstaPromptMultipleStyleSelector:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        style_list = []
+        if os.path.exists(STYLES_PATH):
+            with open(STYLES_PATH, "r") as f:
+                if len(f.readlines()) != 0:
+                    f.seek(0)
+                    data = f.read()
+                    styles = json.loads(data)
+                    for style in styles.keys():
+                        style_list.append(style)
+        if not style_list:
+            style_list.append("None")
+        return {
+            "required": {
+                "style1": (style_list,),
+                "style2": (style_list,),
+                "style3": (style_list,),
+                "style4": (style_list,),
+            }
+        }
+
+    RETURN_TYPES = ("STRING","STRING")
+    RETURN_NAMES = ("positive_string", "negative_string")
+    FUNCTION = "load_style"
+
+    CATEGORY = "WAS Suite/Text"
+
+    def load_style(self, style1, style2, style3, style4):
+        styles = {}
+        if os.path.exists(STYLES_PATH):
+            with open(STYLES_PATH, 'r') as data:
+                styles = json.load(data)
+        else:
+            print(f"The styles file does not exist at `{STYLES_PATH}`. Unable to load styles! Have you imported your AUTOMATIC1111 WebUI styles?")
+            return ('', '')
+
+        # Check if the selected styles exist in the loaded styles dictionary
+        selected_styles = [style1, style2, style3, style4]
+        for style in selected_styles:
+            if style not in styles:
+                print(f"Style '{style}' was not found in the styles file.")
+                return ('', '')
+
+        prompt = ""
+        negative_prompt = ""
+
+        # Concatenate the prompts and negative prompts of the selected styles
+        for style in selected_styles:
+            prompt += styles[style]['prompt'] + " "
+            negative_prompt += styles[style]['negative_prompt'] + " "
+
+        return (prompt.strip(), negative_prompt.strip())
 
 NODE_CLASS_MAPPINGS = {
     "InstaCBoolean": InstaCBoolean,
@@ -299,6 +437,8 @@ NODE_CLASS_MAPPINGS = {
     "InstaCSaveImageToS3": InstaCSaveImageToS3,
     "InstaCLoadImageFromS3": InstaCLoadImageFromS3,
     "InstaCLoraLoader": InstaCLoraLoader,
+    "InstaPromptStyleSelector": InstaPromptStyleSelector,
+    "InstaPromptMultipleStyleSelector": InstaPromptMultipleStyleSelector
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -311,5 +451,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "InstaCSeed": "InstaSD API Input - Seed",
     "InstaCSaveImageToS3": "InstaSD S3 - Save Image",
     "InstaCLoadImageFromS3": "InstaSD S3 - Load Image",
-    "InstaCLoraLoader": "InstaSD API Input - Lora Loader"
+    "InstaCLoraLoader": "InstaSD API Input - Lora Loader",
+    "InstaPromptStyleSelector": "InstaSD - Style Selctor",
+    "InstaPromptMultipleStyleSelector": "InstaSD - Multiple Style Selctor"
 }
