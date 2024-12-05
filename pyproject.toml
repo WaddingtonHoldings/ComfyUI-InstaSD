@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-instasd"
+description = "A collection of nodes for use with InstaSD. These nodes will be transformed into app inputs when you deploy your ComfyUI workflow on InstaSD."
+version = "1.0.0"
+license = {file = "LICENSE"}
+
+[project.urls]
+Repository = "https://github.com/WaddingtonHoldings/ComfyUI-InstaSD"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI-InstaSD"
+Icon = ""
