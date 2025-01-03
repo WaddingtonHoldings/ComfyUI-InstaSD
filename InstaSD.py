@@ -10,6 +10,8 @@ import comfy.utils
 import os
 import json
 
+input_dir = folder_paths.get_input_directory()
+
 STYLES_PATH = os.path.join('/ComfyUI/styles', 'styles.json')
 WEBUI_STYLES_FILE = os.path.join('/ComfyUI/styles', 'styles.csv')
 
@@ -427,6 +429,46 @@ class InstaPromptMultipleStyleSelector:
 
         return (prompt.strip(), negative_prompt.strip())
 
+class LoadVideo:
+    @classmethod
+    def INPUT_TYPES(s):
+        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f)) and f.split('.')[-1] in ["mp4", "webm","mkv","avi"]]
+        return {"required":{
+            "video":(files,),
+        }}
+    
+    CATEGORY = "InstaSD-Utility"
+
+    RETURN_TYPES = ("VIDEO",)
+
+    OUTPUT_NODE = False
+
+    FUNCTION = "load_video"
+
+    def load_video(self, video):
+        video_path = os.path.join(input_dir,video)
+        return (video_path,)
+
+class PreViewVideo:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required":{
+            "video":("VIDEO",),
+        }}
+    
+    CATEGORY = "InstaSD-Utility"
+
+    RETURN_TYPES = ()
+
+    OUTPUT_NODE = True
+
+    FUNCTION = "load_video"
+
+    def load_video(self, video):
+        video_name = os.path.basename(video)
+        video_path_name = os.path.basename(os.path.dirname(video))
+        return {"ui":{"video":[video_name,video_path_name]}}
+
 NODE_CLASS_MAPPINGS = {
     "InstaCBoolean": InstaCBoolean,
     "InstaCText": InstaCText,
@@ -438,7 +480,9 @@ NODE_CLASS_MAPPINGS = {
     "InstaCLoadImageFromS3": InstaCLoadImageFromS3,
     "InstaCLoraLoader": InstaCLoraLoader,
     "InstaPromptStyleSelector": InstaPromptStyleSelector,
-    "InstaPromptMultipleStyleSelector": InstaPromptMultipleStyleSelector
+    "InstaPromptMultipleStyleSelector": InstaPromptMultipleStyleSelector,
+    "LoadVideo": LoadVideo,
+    "PreViewVideo": PreViewVideo
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -453,5 +497,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "InstaCLoadImageFromS3": "InstaSD S3 - Load Image",
     "InstaCLoraLoader": "InstaSD API Input - Lora Loader",
     "InstaPromptStyleSelector": "InstaSD - Style Selctor",
-    "InstaPromptMultipleStyleSelector": "InstaSD - Multiple Style Selctor"
+    "InstaPromptMultipleStyleSelector": "InstaSD - Multiple Style Selctor",
+    "LoadVideo": "InstaSD - LoadVideo Utility Node",
+    "PreViewVideo": "InstaSD - PreviewVideo Utility Node"
 }

@@ -1,4 +1,4 @@
-from .InstaSD import InstaCBoolean, InstaCText, InstaCTextML, InstaCInteger, InstaCFloat, InstaCSeed, InstaCSaveImageToS3, InstaCLoadImageFromS3, InstaCLoraLoader, InstaPromptStyleSelector, InstaPromptMultipleStyleSelector
+from .InstaSD import LoadVideo, PreViewVideo, InstaCBoolean, InstaCText, InstaCTextML, InstaCInteger, InstaCFloat, InstaCSeed, InstaCSaveImageToS3, InstaCLoadImageFromS3, InstaCLoraLoader, InstaPromptStyleSelector, InstaPromptMultipleStyleSelector
 
 NODE_CLASS_MAPPINGS = {
     "InstaCBoolean": InstaCBoolean,
@@ -11,7 +11,9 @@ NODE_CLASS_MAPPINGS = {
     "InstaCLoadImageFromS3": InstaCLoadImageFromS3,
     "InstaCLoraLoader": InstaCLoraLoader,
     "InstaPromptStyleSelector": InstaPromptStyleSelector,
-    "InstaPromptMultipleStyleSelector": InstaPromptMultipleStyleSelector
+    "InstaPromptMultipleStyleSelector": InstaPromptMultipleStyleSelector,
+    "LoadVideo": LoadVideo,
+    "PreViewVideo": PreViewVideo
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -25,7 +27,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "InstaCLoadImageFromS3": "InstaSD S3 - Load Image",
     "InstaCLoraLoader": "InstaSD API Input - Lora Loader",
     "InstaPromptStyleSelector": "InstaSD - Style Selctor",
-    "InstaPromptMultipleStyleSelector": "InstaSD - Multiple Style Selctor"
+    "InstaPromptMultipleStyleSelector": "InstaSD - Multiple Style Selctor",
+    "LoadVideo": "InstaSD - LoadVideo Utility Node",
+    "PreViewVideo": "InstaSD - PreviewVideo Utility Node"
 }
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
