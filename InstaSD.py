@@ -543,6 +543,173 @@ class InstaLoadImageLocal:
 
         return True
 
+class InstaLoadImageWithMask:
+    @classmethod
+    def INPUT_TYPES(s):
+        input_dir = folder_paths.get_input_directory()
+        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+        return {"required":
+                    {"image": (sorted(files), {"image_upload": True})},
+                "hidden": {
+                    "mask_image": "MASK_IMAGE",
+                }
+                }
+
+    CATEGORY = "image"
+
+    RETURN_TYPES = ("IMAGE", "IMAGE")
+    RETURN_NAMES = ("image", "mask")
+    FUNCTION = "load_image"
+    
+    def load_image(self, image, mask_image=None):
+        image_path = folder_paths.get_annotated_filepath(image)
+        img = node_helpers.pillow(Image.open, image_path)
+
+        output_images = []
+        output_masks = []
+        w, h = None, None
+        excluded_formats = ['MPO']
+
+        # Process main image
+        for i in ImageSequence.Iterator(img):
+            i = node_helpers.pillow(ImageOps.exif_transpose, i)
+
+            if i.mode == 'I':
+                i = i.point(lambda i: i * (1 / 255))
+            image = i.convert("RGB")
+
+            if len(output_images) == 0:
+                w = image.size[0]
+                h = image.size[1]
+
+            if image.size[0] != w or image.size[1] != h:
+                continue
+
+            image = np.array(image).astype(np.float32) / 255.0
+            image = torch.from_numpy(image)[None,]
+            
+            # If no custom mask is provided, use alpha channel from main image
+            if mask_image is None:
+                if 'A' in i.getbands():
+                    # Get alpha channel and convert to proper format
+                    # Invert the alpha values: 1.0 - alpha
+                    alpha = 1.0 - np.array(i.getchannel('A')).astype(np.float32) / 255.0
+                    
+                    # Create a 3-channel mask image (H,W,3) with same dimensions as original
+                    mask_array = np.zeros((alpha.shape[0], alpha.shape[1], 3), dtype=np.float32)
+                    # Fill all channels with inverted alpha values
+                    mask_array[:,:,0] = alpha
+                    mask_array[:,:,1] = alpha
+                    mask_array[:,:,2] = alpha
+                    
+                    # Convert to tensor with batch dimension [1,H,W,3]
+                    mask_image_tensor = torch.from_numpy(mask_array)[None,]
+                else:
+                    # Create an empty mask with same dimensions as the image
+                    mask_array = np.zeros((image.shape[1], image.shape[2], 3), dtype=np.float32)
+                    mask_image_tensor = torch.from_numpy(mask_array)[None,]
+            
+            output_images.append(image)
+            if mask_image is None:
+                output_masks.append(mask_image_tensor)
+
+        # Process custom mask image if provided
+        if mask_image is not None:
+            # If mask_image is a tensor (from mask editing), use it directly
+            if isinstance(mask_image, torch.Tensor):
+                # Ensure mask has correct dimensions
+                if len(mask_image.shape) == 2:  # Single channel mask
+                    h, w = mask_image.shape
+                    mask_rgb = torch.zeros((3, h, w), dtype=torch.float32, device=mask_image.device)
+                    mask_rgb[0] = mask_image
+                    mask_rgb[1] = mask_image
+                    mask_rgb[2] = mask_image
+                    mask_tensor = mask_rgb.unsqueeze(0)  # Add batch dimension
+                elif len(mask_image.shape) == 3 and mask_image.shape[0] == 1:  # Batch of single channel
+                    _, h, w = mask_image.shape
+                    mask_rgb = torch.zeros((1, 3, h, w), dtype=torch.float32, device=mask_image.device)
+                    mask_rgb[0, 0] = mask_image[0]
+                    mask_rgb[0, 1] = mask_image[0]
+                    mask_rgb[0, 2] = mask_image[0]
+                    mask_tensor = mask_rgb
+                else:
+                    # Assume it's already in the right format
+                    mask_tensor = mask_image
+                
+                output_masks.append(mask_tensor)
+            else:
+                # If mask_image is a string (file path), load it
+                try:
+                    mask_path = folder_paths.get_annotated_filepath(mask_image)
+                    mask_img = node_helpers.pillow(Image.open, mask_path)
+                    
+                    for i in ImageSequence.Iterator(mask_img):
+                        i = node_helpers.pillow(ImageOps.exif_transpose, i)
+                        
+                        if i.mode == 'I':
+                            i = i.point(lambda i: i * (1 / 255))
+                        
+                        # Convert to grayscale if it's not already
+                        if i.mode != 'L':
+                            mask = i.convert("L")
+                        else:
+                            mask = i
+                        
+                        # Resize mask to match the main image dimensions if needed
+                        if mask.size[0] != w or mask.size[1] != h:
+                            mask = mask.resize((w, h), Image.LANCZOS)
+                        
+                        # Convert to numpy array and normalize
+                        mask_array = np.array(mask).astype(np.float32) / 255.0
+                        
+                        # Create a 3-channel mask image
+                        mask_rgb = np.zeros((mask_array.shape[0], mask_array.shape[1], 3), dtype=np.float32)
+                        mask_rgb[:,:,0] = mask_array
+                        mask_rgb[:,:,1] = mask_array
+                        mask_rgb[:,:,2] = mask_array
+                        
+                        # Convert to tensor
+                        mask_tensor = torch.from_numpy(mask_rgb)[None,]
+                        output_masks.append(mask_tensor)
+                        
+                        # Only use the first frame of the mask image
+                        break
+                except Exception as e:
+                    print(f"Error loading mask image: {e}")
+                    # Create an empty mask with same dimensions as the image
+                    mask_array = np.zeros((image.shape[1], image.shape[2], 3), dtype=np.float32)
+                    mask_tensor = torch.from_numpy(mask_array)[None,]
+                    output_masks.append(mask_tensor)
+
+        if len(output_images) > 1 and img.format not in excluded_formats:
+            output_image = torch.cat(output_images, dim=0)
+            if len(output_masks) > 1:
+                output_mask = torch.cat(output_masks, dim=0)
+            else:
+                # If we have a single mask but multiple images, repeat the mask
+                output_mask = output_masks[0].repeat(len(output_images), 1, 1, 1)
+        else:
+            output_image = output_images[0]
+            output_mask = output_masks[0] if output_masks else torch.zeros((1, 3, h, w), dtype=torch.float32)
+
+        return (output_image, output_mask)
+
+    @classmethod
+    def IS_CHANGED(s, image, mask_image=None):
+        image_path = folder_paths.get_annotated_filepath(image)
+        m = hashlib.sha256()
+        with open(image_path, 'rb') as f:
+            m.update(f.read())
+                
+        return m.digest().hex()
+
+    @classmethod
+    def VALIDATE_INPUTS(s, image, mask_image=None):
+        if not folder_paths.exists_annotated_filepath(image):
+            return "Invalid image file: {}".format(image)
+
+        return True
+
 NODE_CLASS_MAPPINGS = {
     "InstaCBoolean": InstaCBoolean,
     "InstaCText": InstaCText,
@@ -557,7 +724,8 @@ NODE_CLASS_MAPPINGS = {
     "InstaPromptMultipleStyleSelector": InstaPromptMultipleStyleSelector,
     "LoadVideo": LoadVideo,
     "PreViewVideo": PreViewVideo,
-    "InstaLoadImageLocal": InstaLoadImageLocal
+    "InstaLoadImageLocal": InstaLoadImageLocal,
+    "InstaLoadImageWithMask": InstaLoadImageWithMask
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -575,5 +743,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "InstaPromptMultipleStyleSelector": "InstaSD - Multiple Style Selctor",
     "LoadVideo": "InstaSD - LoadVideo Utility Node",
     "PreViewVideo": "InstaSD - PreviewVideo Utility Node",
-    "InstaLoadImageLocal": "InstaSD - Load image from local folder"
+    "InstaLoadImageLocal": "InstaSD - Load image from local folder",
+    "InstaLoadImageWithMask": "InstaSD API Input - Load Image With Mask"
 }

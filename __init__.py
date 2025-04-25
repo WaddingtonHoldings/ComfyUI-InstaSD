@@ -1,4 +1,4 @@
-from .InstaSD import LoadVideo, PreViewVideo, InstaCBoolean, InstaCText, InstaCTextML, InstaCInteger, InstaCFloat, InstaCSeed, InstaCSaveImageToS3, InstaCLoadImageFromS3, InstaCLoraLoader, InstaPromptStyleSelector, InstaPromptMultipleStyleSelector, InstaLoadImageLocal
+from .InstaSD import LoadVideo, PreViewVideo, InstaCBoolean, InstaCText, InstaCTextML, InstaCInteger, InstaCFloat, InstaCSeed, InstaCSaveImageToS3, InstaCLoadImageFromS3, InstaCLoraLoader, InstaPromptStyleSelector, InstaPromptMultipleStyleSelector, InstaLoadImageLocal, InstaLoadImageWithMask
 
 NODE_CLASS_MAPPINGS = {
     "InstaCBoolean": InstaCBoolean,
@@ -14,7 +14,8 @@ NODE_CLASS_MAPPINGS = {
     "InstaPromptMultipleStyleSelector": InstaPromptMultipleStyleSelector,
     "LoadVideo": LoadVideo,
     "PreViewVideo": PreViewVideo,
-    "InstaLoadImageLocal": InstaLoadImageLocal
+    "InstaLoadImageLocal": InstaLoadImageLocal,
+    "InstaLoadImageWithMask": InstaLoadImageWithMask
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -31,7 +32,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "InstaPromptMultipleStyleSelector": "InstaSD - Multiple Style Selctor",
     "LoadVideo": "InstaSD - LoadVideo Utility Node",
     "PreViewVideo": "InstaSD - PreviewVideo Utility Node",
-    "InstaLoadImageLocal": "InstaSD - Load image from local folder"
+    "InstaLoadImageLocal": "InstaSD - Load image from local folder",
+    "InstaLoadImageWithMask": "InstaSD API Input - Load Image With Mask"
 }
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
