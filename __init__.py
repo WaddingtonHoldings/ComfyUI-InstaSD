@@ -1,39 +1,20 @@
-from .InstaSD import LoadVideo, PreViewVideo, InstaCBoolean, InstaCText, InstaCTextML, InstaCInteger, InstaCFloat, InstaCSeed, InstaCSaveImageToS3, InstaCLoadImageFromS3, InstaCLoraLoader, InstaPromptStyleSelector, InstaPromptMultipleStyleSelector, InstaLoadImageLocal, InstaLoadImageWithMask
+"""
+ComfyUI-InstaSD
+Custom nodes for InstaSD integration with ComfyUI, including API inputs, S3 storage,
+style selection, utility nodes for video and image handling, and GPT image generation.
+"""
 
-NODE_CLASS_MAPPINGS = {
-    "InstaCBoolean": InstaCBoolean,
-    "InstaCText": InstaCText,
-    "InstaCInteger": InstaCInteger,
-    "InstaCFloat": InstaCFloat,
-    "InstaCTextML": InstaCTextML,
-    "InstaCSeed": InstaCSeed,
-    "InstaCSaveImageToS3": InstaCSaveImageToS3,
-    "InstaCLoadImageFromS3": InstaCLoadImageFromS3,
-    "InstaCLoraLoader": InstaCLoraLoader,
-    "InstaPromptStyleSelector": InstaPromptStyleSelector,
-    "InstaPromptMultipleStyleSelector": InstaPromptMultipleStyleSelector,
-    "LoadVideo": LoadVideo,
-    "PreViewVideo": PreViewVideo,
-    "InstaLoadImageLocal": InstaLoadImageLocal,
-    "InstaLoadImageWithMask": InstaLoadImageWithMask
-}
+# Import mappings from both modules
+from .InstaSD import NODE_CLASS_MAPPINGS as INSTA_NODE_CLASS_MAPPINGS
+from .InstaSD import NODE_DISPLAY_NAME_MAPPINGS as INSTA_NODE_DISPLAY_NAME_MAPPINGS
+from .gpt import NODE_CLASS_MAPPINGS as GPT_NODE_CLASS_MAPPINGS
+from .gpt import NODE_DISPLAY_NAME_MAPPINGS as GPT_NODE_DISPLAY_NAME_MAPPINGS
 
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "InstaCBoolean": "InstaSD API Input - Boolean",
-    "InstaCText": "InstaSD API Input - String",
-    "InstaCInteger": "InstaSD API Input - Integer",
-    "InstaCFloat": "InstaSD API Input - Float",
-    "InstaCTextML": "InstaSD API Input - Multi Line Text",
-    "InstaCSeed": "InstaSD API Input - Seed",
-    "InstaCSaveImageToS3": "InstaSD S3 - Save Image",
-    "InstaCLoadImageFromS3": "InstaSD S3 - Load Image",
-    "InstaCLoraLoader": "InstaSD API Input - Lora Loader",
-    "InstaPromptStyleSelector": "InstaSD - Style Selctor",
-    "InstaPromptMultipleStyleSelector": "InstaSD - Multiple Style Selctor",
-    "LoadVideo": "InstaSD - LoadVideo Utility Node",
-    "PreViewVideo": "InstaSD - PreviewVideo Utility Node",
-    "InstaLoadImageLocal": "InstaSD - Load image from local folder",
-    "InstaLoadImageWithMask": "InstaSD API Input - Load Image With Mask"
-}
+# Merge the mappings
+NODE_CLASS_MAPPINGS = {**INSTA_NODE_CLASS_MAPPINGS, **GPT_NODE_CLASS_MAPPINGS}
+NODE_DISPLAY_NAME_MAPPINGS = {**INSTA_NODE_DISPLAY_NAME_MAPPINGS, **GPT_NODE_DISPLAY_NAME_MAPPINGS}
+
+# You can still import the individual classes if needed for other purposes
+# but they're not required for the node registration
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
