@@ -36,23 +36,30 @@ app.registerExtension({
                 }
             } else if (event.data.type === "get_enabled_node_lists") {
                 try {
-                    const response = await fetch('/api/customnode/getlist?mode=cache&skip_update=true');
-                    const data = await response.json();
+                    // Fetch both customnode list and object_info in parallel
+                    const [nodeResponse, objectInfoResponse] = await Promise.all([
+                        fetch('/api/customnode/getlist?mode=cache&skip_update=true'),
+                        fetch('/api/object_info')
+                    ]);
+                    
+                    const nodeData = await nodeResponse.json();
+                    const objectInfo = await objectInfoResponse.json();
                     
                     // Extract IDs of nodes with state "enabled"
-                    const enabledNodeIds = Object.keys(data.node_packs)
-                        .filter(nodeId => data.node_packs[nodeId].state === "enabled")
-                        .map(nodeId => data.node_packs[nodeId].id);
+                    const enabledNodeIds = Object.keys(nodeData.node_packs)
+                        .filter(nodeId => nodeData.node_packs[nodeId].state === "enabled")
+                        .map(nodeId => nodeData.node_packs[nodeId].id);
 
                     event.source.postMessage({ 
                         type: "node_lists_response", 
-                        nodes: enabledNodeIds 
+                        nodes: enabledNodeIds,
+                        object_info: objectInfo
                     }, event.origin);
                 } catch (error) {
-                    console.error('Error fetching node lists:', error);
+                    console.error('Error fetching node lists or object info:', error);
                     event.source.postMessage({ 
                         type: "node_lists_response", 
-                        error: "Failed to fetch node lists" 
+                        error: "Failed to fetch node lists or object info" 
                     }, event.origin);
                 }
             }
