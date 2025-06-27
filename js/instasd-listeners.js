@@ -61,7 +61,8 @@ app.registerExtension({
         window.addEventListener("message", async (event) => {
             // Allow any localhost origin including subdomains and any instasd.com subdomain
             if (!event.origin.match(/^https?:\/\/(.*\.)?localhost(:[0-9]+)?$/) && 
-                !event.origin.match(/^https?:\/\/(.*\.)?instasd\.com$/)) {
+                !event.origin.match(/^https?:\/\/(.*\.)?instasd\.com$/) &&
+                !event.origin.match(/^https?:\/\/(.*\.)?instasddev\.com$/)) {
                 console.log("Rejected message from unauthorized origin:", event.origin);
                 return;
             }
