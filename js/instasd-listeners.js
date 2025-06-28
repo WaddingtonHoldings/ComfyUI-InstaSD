@@ -53,7 +53,7 @@ app.registerExtension({
                     event.source.postMessage({ 
                         type: "node_lists_response", 
                         nodes: enabledNodeIds,
-                        object_info: objectInfo
+                        object_info: JSON.stringify(objectInfo)
                     }, event.origin);
                 } catch (error) {
                     console.error('Error fetching node lists or object info:', error);
