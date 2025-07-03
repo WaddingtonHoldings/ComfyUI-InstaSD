@@ -37,13 +37,15 @@ app.registerExtension({
             } else if (event.data.type === "get_enabled_node_lists") {
                 try {
                     // Fetch both customnode list and object_info in parallel
-                    const [nodeResponse, objectInfoResponse] = await Promise.all([
+                    const [nodeResponse, objectInfoResponse, extensions] = await Promise.all([
                         fetch('/api/customnode/getlist?mode=cache&skip_update=true'),
-                        fetch('/api/object_info')
+                        fetch('/api/object_info'),
+                        fetch('/api/extensions')
                     ]);
                     
                     const nodeData = await nodeResponse.json();
                     const objectInfo = await objectInfoResponse.json();
+                    const comfyExtensions = await extensions.json();
                     
                     // Extract IDs of nodes with state "enabled"
                     const enabledNodeIds = Object.keys(nodeData.node_packs)
@@ -53,7 +55,8 @@ app.registerExtension({
                     event.source.postMessage({ 
                         type: "node_lists_response", 
                         nodes: enabledNodeIds,
-                        object_info: JSON.stringify(objectInfo)
+                        object_info: JSON.stringify(objectInfo),
+                        comfy_extensions: JSON.stringify(comfyExtensions)
                     }, event.origin);
                 } catch (error) {
                     console.error('Error fetching node lists or object info:', error);
