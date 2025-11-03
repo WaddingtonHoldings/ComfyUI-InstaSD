@@ -710,6 +710,44 @@ class InstaLoadImageWithMask:
 
         return True
 
+class InstaFileExist:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "file_path": ("STRING", {"default": ""}),
+                "file_name": ("STRING", {"default": ""}),
+                "file_extension": ("STRING", {"default": ""}),
+            },
+            "optional": {
+            }
+        }
+
+    RETURN_TYPES = ("BOOLEAN",)
+    RETURN_NAMES = ("boolean",)
+    FUNCTION = "execute"
+    CATEGORY = "InstaSD/Logic"
+
+    def execute(self, file_path, file_name, file_extension):
+        if not file_path:
+            raise Exception("file_path is missing")
+
+        if file_name:
+            file_path = os.path.join(file_path, file_name)
+        if file_extension:
+            file_path = file_path + "." + file_extension
+
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return (True,)
+        else:
+            return (False,)
+    
+    @classmethod
+    def IS_CHANGED(s, file_path, file_name, file_extension):
+        # Return current timestamp to ensure the node runs on every execution
+        # This prevents ComfyUI from caching the result
+        return datetime.now().timestamp()
+
 NODE_CLASS_MAPPINGS = {
     "InstaCBoolean": InstaCBoolean,
     "InstaCText": InstaCText,
@@ -725,7 +763,8 @@ NODE_CLASS_MAPPINGS = {
     "LoadVideo": LoadVideo,
     "PreViewVideo": PreViewVideo,
     "InstaLoadImageLocal": InstaLoadImageLocal,
-    "InstaLoadImageWithMask": InstaLoadImageWithMask
+    "InstaLoadImageWithMask": InstaLoadImageWithMask,
+    "InstaFileExist": InstaFileExist
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -744,5 +783,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadVideo": "InstaSD - LoadVideo Utility Node",
     "PreViewVideo": "InstaSD - PreviewVideo Utility Node",
     "InstaLoadImageLocal": "InstaSD - Load image from local folder",
-    "InstaLoadImageWithMask": "InstaSD API Input - Load Image With Mask"
+    "InstaLoadImageWithMask": "InstaSD API Input - Load Image With Mask",
+    "InstaFileExist": "InstaSD - Check File Exists"
 }
